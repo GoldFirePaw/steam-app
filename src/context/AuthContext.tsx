@@ -1,8 +1,6 @@
 import React, { createContext, useState, ReactNode, useContext } from "react"
-import axios from "axios"
-import { jwtDecode } from "jwt-decode"
-
-const API_URL = "http://localhost:5001"
+import { loginWithGoogleApi } from "../api/loginWithGoogleApi"
+import { updateUserPseudoApi } from "../api/updateUserPseudoApi"
 
 interface User {
   id: string
@@ -48,16 +46,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
     setLoading(true)
     setError(null)
     try {
-      const decodedToken: any = jwtDecode(credential) // Décoder le JWT Google
-      const response = await axios.post(`${API_URL}/auth/google`, {
-        googleId: decodedToken.sub,
-        name: decodedToken.name,
-        email: decodedToken.email,
-        picture: decodedToken.picture,
-      })
-      setUser(response.data.user)
-      setNewUser(response.data.newUser)
-      localStorage.setItem("user", JSON.stringify(response.data.user))
+      const data = await loginWithGoogleApi(credential)
+      setUser(data.user)
+      setNewUser(data.newUser)
+      localStorage.setItem("user", JSON.stringify(data.user))
     } catch (error) {
       setError("Error during Google authentication")
     } finally {
@@ -69,12 +61,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
     setLoading(true)
     setError(null)
     try {
-      const response = await axios.post(`${API_URL}/user/${googleId}/pseudo`, {
-        pseudo,
-      })
-      setUser(response.data)
+      const data = await updateUserPseudoApi(googleId, pseudo)
+      setUser(data)
       setNewUser(false)
-      localStorage.setItem("user", JSON.stringify(response.data))
+      localStorage.setItem("user", JSON.stringify(data))
     } catch (error) {
       setError("Error updating pseudo")
     } finally {
