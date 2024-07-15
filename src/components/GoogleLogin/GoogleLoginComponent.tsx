@@ -1,23 +1,24 @@
 import React from "react"
 import { GoogleLogin, CredentialResponse } from "@react-oauth/google"
+import { useNavigate } from "react-router-dom"
 
 interface GoogleLoginComponentProps {
   onLoginSuccess: (credential: string) => void
-  onLogoutSuccess: () => void
 }
 
 export const GoogleLoginComponent: React.FC<GoogleLoginComponentProps> = ({
   onLoginSuccess,
-  onLogoutSuccess,
 }) => {
+  const navigate = useNavigate()
+
   const handleLoginSuccess = (credentialResponse: CredentialResponse) => {
     if (credentialResponse.credential) {
       onLoginSuccess(credentialResponse.credential)
     }
   }
 
-  const handleLogout = () => {
-    onLogoutSuccess()
+  const handleCancel = () => {
+    navigate("/")
   }
 
   return (
@@ -28,7 +29,7 @@ export const GoogleLoginComponent: React.FC<GoogleLoginComponentProps> = ({
           console.log("Login Failed")
         }}
       />
-      <button onClick={handleLogout}>Logout</button>
+      <button onClick={handleCancel}>Cancel</button>
     </div>
   )
 }
