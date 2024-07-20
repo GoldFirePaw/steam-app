@@ -1,0 +1,30 @@
+# Node modules
+node_modules/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Environnement
+.env
+
+# Cache et build
+.cache/
+dist/
+build/
+
+# Système d'exploitation
+.DS_Store
+Thumbs.db
+
+# Editeurs et IDEs
+.vscode/
+.idea/
+*.sublime-workspace
+*.sublime-project
+
+# Tests
+coverage/

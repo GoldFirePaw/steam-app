@@ -1,25 +1,29 @@
+require('dotenv').config();
+
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const bodyParser = require('body-parser');
-
-// Créez un schéma et un modèle utilisateur
-const userSchema = new mongoose.Schema({
-  googleId: { type: String, required: true, unique: true },
-  name: String,
-  email: String,
-  picture: String,
-  pseudo: String,
-});
-
-const User = mongoose.model('User', userSchema);
+const jwt = require('jsonwebtoken');
+const cookieParser = require('cookie-parser');
 
 const app = express();
-app.use(cors());
+app.use(cors({
+  origin: 'http://localhost:3000', // Le domaine de votre frontend React
+  credentials: true
+}));
 app.use(bodyParser.json());
+app.use(cookieParser());
 
-// Connexion à la base de données MongoDB
-mongoose.connect('mongodb://localhost:27017/steam-app-project', {
+const ACCESS_TOKEN_SECRET = process.env.ACCESS_TOKEN_SECRET;
+const REFRESH_TOKEN_SECRET = process.env.REFRESH_TOKEN_SECRET;
+const MONGODB_URI = process.env.MONGODB_URI;
+
+console.log('ACCESS_TOKEN_SECRET:', ACCESS_TOKEN_SECRET);
+console.log('REFRESH_TOKEN_SECRET:', REFRESH_TOKEN_SECRET);
+console.log('MONGODB_URI:', MONGODB_URI);
+
+mongoose.connect(MONGODB_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
 }).then(() => {
@@ -36,6 +40,24 @@ app.use((req, res, next) => {
   next();
 });
 
+// Créez un schéma et un modèle utilisateur
+const userSchema = new mongoose.Schema({
+  googleId: { type: String, required: true, unique: true },
+  name: String,
+  email: String,
+  picture: String,
+  pseudo: String,
+});
+
+const User = mongoose.model('User', userSchema);
+
+// Fonction pour générer des tokens
+const generateTokens = (user) => {
+  const accessToken = jwt.sign(user, ACCESS_TOKEN_SECRET, { expiresIn: '15m' });
+  const refreshToken = jwt.sign(user, REFRESH_TOKEN_SECRET, { expiresIn: '7d' });
+  return { accessToken, refreshToken };
+};
+
 // Endpoint de connexion Google
 app.post('/auth/google', async (req, res) => {
   const { googleId, name, email, picture } = req.body;
@@ -47,18 +69,52 @@ app.post('/auth/google', async (req, res) => {
       user = new User({ googleId, name, email, picture, pseudo: '' });
       await user.save();
       console.log('New user created:', user);
-      return res.status(201).send({ user, newUser: true });
     }
-    console.log('User exists:', user);
-    res.send({ user, newUser: false });
+
+    const tokens = generateTokens({ id: user.id, googleId: user.googleId });
+    res.cookie('refreshToken', tokens.refreshToken, { httpOnly: true, secure: true, sameSite: 'Strict' });
+    res.send({ accessToken: tokens.accessToken, user });
   } catch (error) {
     console.error('Error during Google authentication:', error);
     res.status(500).send('Error during Google authentication');
   }
 });
 
+// Endpoint pour rafraîchir les tokens
+app.post('/refresh-token', (req, res) => {
+  const refreshToken = req.cookies.refreshToken;
+  if (!refreshToken) return res.sendStatus(403);
+
+  jwt.verify(refreshToken, REFRESH_TOKEN_SECRET, (err, user) => {
+    if (err) return res.sendStatus(403);
+
+    const tokens = generateTokens({ id: user.id, googleId: user.googleId });
+    res.cookie('refreshToken', tokens.refreshToken, { httpOnly: true, secure: true, sameSite: 'Strict' });
+    res.json({ accessToken: tokens.accessToken });
+  });
+});
+
+// Endpoint pour déconnexion
+app.post('/logout', (req, res) => {
+  res.clearCookie('refreshToken');
+  res.sendStatus(204);
+});
+
+// Middleware pour vérifier le token d'accès
+const authenticateToken = (req, res, next) => {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+  if (!token) return res.sendStatus(401);
+
+  jwt.verify(token, ACCESS_TOKEN_SECRET, (err, user) => {
+    if (err) return res.sendStatus(403);
+    req.user = user;
+    next();
+  });
+};
+
 // Endpoint pour mettre à jour le pseudo de l'utilisateur
-app.post('/user/:googleId/pseudo', async (req, res) => {
+app.post('/user/:googleId/pseudo', authenticateToken, async (req, res) => {
   try {
     console.log('Updating pseudo for user:', req.params.googleId, 'with pseudo:', req.body.pseudo);
     const user = await User.findOneAndUpdate(
