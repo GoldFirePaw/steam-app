@@ -4,6 +4,7 @@ import "./index.css"
 import { App } from "./App"
 import reportWebVitals from "./reportWebVitals"
 import { GoogleOAuthProvider } from "@react-oauth/google"
+import { BrowserRouter as Router } from "react-router-dom"
 
 const googleClientId = process.env.REACT_APP_GOOGLE_API_TOKEN
 
@@ -14,7 +15,9 @@ if (!googleClientId) {
 ReactDOM.render(
   <React.StrictMode>
     <GoogleOAuthProvider clientId={googleClientId}>
-      <App />
+      <Router>
+        <App />
+      </Router>
     </GoogleOAuthProvider>
   </React.StrictMode>,
   document.getElementById("root")
