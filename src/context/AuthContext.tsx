@@ -9,6 +9,7 @@ interface User {
   email: string
   picture: string
   pseudo: string
+  steamId: string
 }
 
 interface AuthContextType {
@@ -19,6 +20,7 @@ interface AuthContextType {
   loginWithGoogle: (credential: string) => Promise<void>
   updateUserPseudo: (googleId: string, pseudo: string) => Promise<void>
   logout: () => void
+  updateUserSteamId: (googleId: string, steamId: string) => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -72,6 +74,34 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
     }
   }
 
+  // Ajoutez cette méthode dans votre contexte AuthContext
+  const updateUserSteamId = async (googleId: string, steamId: string) => {
+    setLoading(true)
+    setError(null)
+    try {
+      const response = await fetch(`/user/${googleId}/steamId`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ steamId }),
+      })
+
+      if (!response.ok) {
+        throw new Error("Failed to update Steam ID")
+      }
+
+      const updatedUser = await response.json()
+      setUser(updatedUser)
+      localStorage.setItem("user", JSON.stringify(updatedUser))
+    } catch (error) {
+      setError("Error updating Steam ID")
+      console.error("Error updating Steam ID:", error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
   const logout = () => {
     setUser(null)
     localStorage.removeItem("user")
@@ -87,6 +117,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
         loginWithGoogle,
         updateUserPseudo,
         logout,
+        updateUserSteamId,
       }}
     >
       {children}

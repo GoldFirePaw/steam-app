@@ -153,6 +153,26 @@ app.use('/api/steam', async (req, res) => {
   }
 });
 
+// Endpoint pour mettre à jour le Steam ID de l'utilisateur
+app.post('/user/:googleId/steamId', authenticateToken, async (req, res) => {
+  try {
+    console.log('Updating Steam ID for user:', req.params.googleId, 'with Steam ID:', req.body.steamId);
+    const user = await User.findOneAndUpdate(
+      { googleId: req.params.googleId },
+      { steamId: req.body.steamId },
+      { new: true }
+    );
+    if (!user) {
+      return res.status(404).send('User not found');
+    }
+    console.log('Updated user:', user);
+    res.send(user);
+  } catch (error) {
+    console.error('Error updating Steam ID:', error);
+    res.status(500).send('Error updating Steam ID');
+  }
+});
+
 const PORT = process.env.PORT || 5001;
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
