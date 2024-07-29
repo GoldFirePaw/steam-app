@@ -1,6 +1,7 @@
 import React, { createContext, useState, ReactNode, useContext } from "react"
 import { loginWithGoogleApi } from "../api/loginWithGoogleApi"
 import { updateUserPseudoApi } from "../api/updateUserPseudoApi"
+import { updateUserSteamIdApi } from "../api/updateUserSteamIdApi"
 
 interface User {
   id: string
@@ -74,24 +75,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
     }
   }
 
-  // Ajoutez cette méthode dans votre contexte AuthContext
   const updateUserSteamId = async (googleId: string, steamId: string) => {
     setLoading(true)
     setError(null)
     try {
-      const response = await fetch(`/user/${googleId}/steamId`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ steamId }),
-      })
-
-      if (!response.ok) {
-        throw new Error("Failed to update Steam ID")
-      }
-
-      const updatedUser = await response.json()
+      const updatedUser = await updateUserSteamIdApi(googleId, steamId)
       setUser(updatedUser)
       localStorage.setItem("user", JSON.stringify(updatedUser))
     } catch (error) {

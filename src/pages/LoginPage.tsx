@@ -9,6 +9,7 @@ export const LoginPage: React.FC = () => {
 
   const handleLoginSuccess = (credential: string) => {
     loginWithGoogle(credential)
+    //TODO : if new user then go to configuration
     navigate("/") // Rediriger vers la page d'accueil après le login
   }
 

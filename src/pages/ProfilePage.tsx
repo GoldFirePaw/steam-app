@@ -1,9 +1,16 @@
 import React, { useState } from "react"
 import { getGamesFromUser, SteamResponse, Game } from "../api/getGamesFromUser"
+import { ConfigurationContent } from "../components/Configuration/ConfigurationContent"
+import { Header } from "../components/Header/Header"
 
-const ProfilePage = () => {
+export const ProfilePage = () => {
   const [steamId, setSteamId] = useState("")
   const [games, setGames] = useState<Game[]>([])
+  const [isConfiguration, setIsConfiguration] = useState(false)
+
+  const handleConfigurationClick = () => {
+    setIsConfiguration(!isConfiguration)
+  }
 
   const handleFetchGames = async () => {
     try {
@@ -24,23 +31,18 @@ const ProfilePage = () => {
 
   return (
     <div>
+      <Header />
       <h1>Profile Page</h1>
-      <div>
-        <input
-          type="text"
-          placeholder="Enter your Steam ID"
-          value={steamId}
-          onChange={(e) => setSteamId(e.target.value)}
-        />
-        <button onClick={handleFetchGames}>Fetch Games</button>
-      </div>
-      <ul>
-        {games.map((game) => (
-          <li key={game.appid}>{game.name}</li>
-        ))}
-      </ul>
+      <button onClick={handleConfigurationClick}> Configure profile </button>
+      {isConfiguration ? (
+        <ConfigurationContent />
+      ) : (
+        <ul>
+          {games.map((game) => (
+            <li key={game.appid}>{game.name}</li>
+          ))}
+        </ul>
+      )}
     </div>
   )
 }
-
-export default ProfilePage

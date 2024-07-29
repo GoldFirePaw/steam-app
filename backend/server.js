@@ -47,6 +47,7 @@ const userSchema = new mongoose.Schema({
   email: String,
   picture: String,
   pseudo: String,
+  steamId: String
 });
 
 const User = mongoose.model('User', userSchema);
@@ -154,17 +155,23 @@ app.use('/api/steam', async (req, res) => {
 });
 
 // Endpoint pour mettre à jour le Steam ID de l'utilisateur
-app.post('/user/:googleId/steamId', authenticateToken, async (req, res) => {
+app.post('/user/:googleId/steamId', async (req, res) => {
   try {
-    console.log('Updating Steam ID for user:', req.params.googleId, 'with Steam ID:', req.body.steamId);
+    console.log('Received request for /user/:googleId/steamId');
+    console.log('Request Params:', req.params);
+    console.log('Request Body:', req.body);
+
     const user = await User.findOneAndUpdate(
       { googleId: req.params.googleId },
       { steamId: req.body.steamId },
       { new: true }
     );
+
     if (!user) {
+      console.log('User not found');
       return res.status(404).send('User not found');
     }
+
     console.log('Updated user:', user);
     res.send(user);
   } catch (error) {
@@ -172,6 +179,7 @@ app.post('/user/:googleId/steamId', authenticateToken, async (req, res) => {
     res.status(500).send('Error updating Steam ID');
   }
 });
+
 
 const PORT = process.env.PORT || 5001;
 app.listen(PORT, () => {
