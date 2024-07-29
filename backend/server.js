@@ -1,15 +1,15 @@
 require('dotenv').config();
-
 const express = require('express');
-const mongoose = require('mongoose');
+const axios = require('axios');
 const cors = require('cors');
 const bodyParser = require('body-parser');
 const jwt = require('jsonwebtoken');
 const cookieParser = require('cookie-parser');
+const mongoose = require('mongoose');
 
 const app = express();
 app.use(cors({
-  origin: 'http://localhost:3000', // Le domaine de votre frontend React
+  origin: 'http://localhost:3000',
   credentials: true
 }));
 app.use(bodyParser.json());
@@ -47,6 +47,7 @@ const userSchema = new mongoose.Schema({
   email: String,
   picture: String,
   pseudo: String,
+  steamId: String
 });
 
 const User = mongoose.model('User', userSchema);
@@ -114,7 +115,7 @@ const authenticateToken = (req, res, next) => {
 };
 
 // Endpoint pour mettre à jour le pseudo de l'utilisateur
-app.post('/user/:googleId/pseudo', authenticateToken, async (req, res) => {
+app.post('/user/:googleId/pseudo', async (req, res) => {
   try {
     console.log('Updating pseudo for user:', req.params.googleId, 'with pseudo:', req.body.pseudo);
     const user = await User.findOneAndUpdate(
@@ -132,6 +133,53 @@ app.post('/user/:googleId/pseudo', authenticateToken, async (req, res) => {
     res.status(500).send('Error updating pseudo');
   }
 });
+
+app.use((req, res, next) => {
+  console.log(`Received request for ${req.url}`);
+  next();
+});
+
+app.use('/api/steam', async (req, res) => {
+  const endpoint = req.url;
+  const steamApiUrl = `http://api.steampowered.com${endpoint}`;
+  console.log('Received request to:', steamApiUrl);
+
+  try {
+    const response = await axios.get(steamApiUrl);
+    console.log('Data fetched from Steam API:', response.data);
+    res.json(response.data);
+  } catch (error) {
+    console.error('Error fetching data from Steam API:', error);
+    res.status(500).send('Error fetching data from Steam API');
+  }
+});
+
+// Endpoint pour mettre à jour le Steam ID de l'utilisateur
+app.post('/user/:googleId/steamId', async (req, res) => {
+  try {
+    console.log('Received request for /user/:googleId/steamId');
+    console.log('Request Params:', req.params);
+    console.log('Request Body:', req.body);
+
+    const user = await User.findOneAndUpdate(
+      { googleId: req.params.googleId },
+      { steamId: req.body.steamId },
+      { new: true }
+    );
+
+    if (!user) {
+      console.log('User not found');
+      return res.status(404).send('User not found');
+    }
+
+    console.log('Updated user:', user);
+    res.send(user);
+  } catch (error) {
+    console.error('Error updating Steam ID:', error);
+    res.status(500).send('Error updating Steam ID');
+  }
+});
+
 
 const PORT = process.env.PORT || 5001;
 app.listen(PORT, () => {

@@ -1,6 +1,7 @@
 import React, { createContext, useState, ReactNode, useContext } from "react"
 import { loginWithGoogleApi } from "../api/loginWithGoogleApi"
 import { updateUserPseudoApi } from "../api/updateUserPseudoApi"
+import { updateUserSteamIdApi } from "../api/updateUserSteamIdApi"
 
 interface User {
   id: string
@@ -9,6 +10,7 @@ interface User {
   email: string
   picture: string
   pseudo: string
+  steamId: string
 }
 
 interface AuthContextType {
@@ -19,6 +21,7 @@ interface AuthContextType {
   loginWithGoogle: (credential: string) => Promise<void>
   updateUserPseudo: (googleId: string, pseudo: string) => Promise<void>
   logout: () => void
+  updateUserSteamId: (googleId: string, steamId: string) => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -61,12 +64,28 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
     setLoading(true)
     setError(null)
     try {
-      const data = await updateUserPseudoApi(googleId, pseudo)
-      setUser(data)
+      const updatedUser = await updateUserPseudoApi(googleId, pseudo)
+      setUser(updatedUser)
       setNewUser(false)
-      localStorage.setItem("user", JSON.stringify(data))
+      localStorage.setItem("user", JSON.stringify(updatedUser))
     } catch (error) {
       setError("Error updating pseudo")
+      console.error("Error updating pseudo:", error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const updateUserSteamId = async (googleId: string, steamId: string) => {
+    setLoading(true)
+    setError(null)
+    try {
+      const updatedUser = await updateUserSteamIdApi(googleId, steamId)
+      setUser(updatedUser)
+      localStorage.setItem("user", JSON.stringify(updatedUser))
+    } catch (error) {
+      setError("Error updating Steam ID")
+      console.error("Error updating Steam ID:", error)
     } finally {
       setLoading(false)
     }
@@ -87,6 +106,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
         loginWithGoogle,
         updateUserPseudo,
         logout,
+        updateUserSteamId,
       }}
     >
       {children}

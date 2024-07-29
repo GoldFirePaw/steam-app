@@ -1,35 +1,26 @@
-import React, { useState, useEffect } from "react"
+import React from "react"
 import { useNavigate } from "react-router-dom"
 import { useAuth } from "../../context/AuthContext"
 import s from "./header.module.css"
 
 export const Header: React.FC = () => {
-  const { user, newUser, loading, error, updateUserPseudo, logout } = useAuth()
-  const [pseudo, setPseudo] = useState<string>("")
-  const navigate = useNavigate()
+  const { user, loading, error, logout } = useAuth()
 
-  useEffect(() => {
-    if (user) {
-      setPseudo(user.pseudo)
-    }
-  }, [user])
+  const navigate = useNavigate()
 
   const handleLogoutSuccess = () => {
     logout()
   }
 
-  const handlePseudoChange = async () => {
-    if (user) {
-      try {
-        await updateUserPseudo(user.googleId, pseudo)
-      } catch (error) {
-        console.error("Error updating pseudo:", error)
-      }
-    }
-  }
-
   const handleLoginClick = () => {
     navigate("/login")
+  }
+
+  const handleProfileClick = () => {
+    navigate("/profile")
+  }
+  const handleHomeClick = () => {
+    navigate("/")
   }
 
   if (loading) {
@@ -44,20 +35,12 @@ export const Header: React.FC = () => {
     <>
       {user ? (
         <div className={s.headerContainer}>
-          {newUser ? (
-            <>
-              <p>Please enter a pseudo:</p>
-              <input
-                type="text"
-                value={pseudo}
-                onChange={(e) => setPseudo(e.target.value)}
-                placeholder="Enter your pseudo"
-              />
-              <button onClick={handlePseudoChange}>Set Pseudo</button>
-            </>
-          ) : (
-            <p>Pseudo: {user.pseudo}</p>
-          )}
+          <button onClick={handleHomeClick}>Home page</button>
+          <>
+            <p>Pseudo: {user.pseudo || "Not set"}</p>
+            <p>Steam ID: {user.steamId || "Not set"}</p>
+          </>
+          <button onClick={handleProfileClick}>Profile page</button>
           <button onClick={handleLogoutSuccess}>Logout</button>
         </div>
       ) : (
