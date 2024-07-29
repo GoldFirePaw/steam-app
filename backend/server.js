@@ -115,7 +115,7 @@ const authenticateToken = (req, res, next) => {
 };
 
 // Endpoint pour mettre à jour le pseudo de l'utilisateur
-app.post('/user/:googleId/pseudo', authenticateToken, async (req, res) => {
+app.post('/user/:googleId/pseudo', async (req, res) => {
   try {
     console.log('Updating pseudo for user:', req.params.googleId, 'with pseudo:', req.body.pseudo);
     const user = await User.findOneAndUpdate(

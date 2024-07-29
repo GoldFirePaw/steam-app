@@ -1,17 +1,20 @@
 import React, { useEffect, useState } from "react"
 import { Header } from "../components/Header/Header"
 import { getGamesFromUser } from "../api/getGamesFromUser"
+import { useAuth } from "../context/AuthContext"
 
 export const HomePage: React.FC = () => {
   const [games, setGames] = useState<any[]>([])
   const apikey = process.env.REACT_APP_STEAM_API_KEY_LOCAL
-  const steamId = "76561198058004856" // Utilisez un ID Steam valide
+  const { user } = useAuth()
+
+  // const steamId = "76561198058004856" // Utilisez un ID Steam valide
 
   useEffect(() => {
     const fetchGames = async () => {
       try {
         if (apikey) {
-          const data = await getGamesFromUser(apikey, steamId)
+          const data = user && (await getGamesFromUser(apikey, user.steamId))
           setGames(data.response.games || [])
         }
       } catch (error) {
@@ -20,7 +23,7 @@ export const HomePage: React.FC = () => {
     }
 
     fetchGames()
-  }, [apikey, steamId])
+  }, [apikey, user])
   return (
     <div className="App">
       <Header />

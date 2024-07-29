@@ -64,12 +64,13 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
     setLoading(true)
     setError(null)
     try {
-      const data = await updateUserPseudoApi(googleId, pseudo)
-      setUser(data)
+      const updatedUser = await updateUserPseudoApi(googleId, pseudo)
+      setUser(updatedUser)
       setNewUser(false)
-      localStorage.setItem("user", JSON.stringify(data))
+      localStorage.setItem("user", JSON.stringify(updatedUser))
     } catch (error) {
       setError("Error updating pseudo")
+      console.error("Error updating pseudo:", error)
     } finally {
       setLoading(false)
     }
