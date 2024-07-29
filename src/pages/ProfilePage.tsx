@@ -1,5 +1,5 @@
 import React, { useState } from "react"
-import { getGamesFromUser, SteamResponse, Game } from "../api/getGamesFromUser"
+// import { getGamesFromUser, SteamResponse, Game } from "../api/getGamesFromUser"
 import { ConfigurationContent } from "../components/Configuration/ConfigurationContent"
 import { Header } from "../components/Header/Header"
 
@@ -24,7 +24,7 @@ export const ProfilePage = () => {
   //     console.error("Failed to fetch user games data:", error)
   //   }
   // }
-
+  
   // if (!games) {
   //   return null
   // }
